@@ -229,6 +229,30 @@ Available assets did not include the expected Linux build."
   fi
   ok "Installed to ${BOLD}${target}${RESET}"
 
+  # AppImages self-mount via FUSE2 (libfuse.so.2). Many modern desktops (e.g.
+  # Ubuntu 24.04) don't ship it, and without it the app fails at launch with
+  # "dlopen(): error loading libfuse.so.2" and never starts. Ensure it's present;
+  # if we can't install it, fall back to extraction mode so the app still runs.
+  local exec_args=""
+  if ! ldconfig -p 2>/dev/null | grep -q 'libfuse\.so\.2'; then
+    warn "AppImage runtime FUSE2 (libfuse.so.2) is not installed."
+    if have apt-get && have sudo; then
+      info "Installing libfuse2 (needs sudo) ..."
+      sudo apt-get update -qq 2>/dev/null || true
+      sudo apt-get install -y libfuse2t64 2>/dev/null || sudo apt-get install -y libfuse2 2>/dev/null || true
+    elif have dnf && have sudo; then
+      sudo dnf install -y fuse-libs 2>/dev/null || true
+    elif have pacman && have sudo; then
+      sudo pacman -S --noconfirm fuse2 2>/dev/null || true
+    fi
+    if ldconfig -p 2>/dev/null | grep -q 'libfuse\.so\.2'; then
+      ok "FUSE2 installed."
+    else
+      warn "Could not install FUSE2 — using extraction mode (slightly slower first launch)."
+      exec_args=" --appimage-extract-and-run"
+    fi
+  fi
+
   # Create a .desktop entry for menu launchers.
   local apps_dir="${HOME}/.local/share/applications"
   mkdir -p "$apps_dir"
@@ -238,7 +262,7 @@ Available assets did not include the expected Linux build."
 Type=Application
 Name=AgentChain
 Comment=AgentChain desktop app
-Exec=${target} %U
+Exec=${target}${exec_args} %U
 Icon=agentchain
 Terminal=false
 Categories=Development;Utility;
@@ -251,7 +275,7 @@ EOF
   printf '\n'
   ok "${BOLD}AgentChain ${version} installed!${RESET}"
   info "Launch it from your app menu, or run:"
-  printf '    %s\n' "${BOLD}${target}${RESET}"
+  printf '    %s\n' "${BOLD}${target}${exec_args}${RESET}"
   case ":${PATH}:" in
     *":${bindir}:"*) : ;;
     *) warn "${bindir} is not on your PATH. Add it with:"
