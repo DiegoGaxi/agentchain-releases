@@ -176,7 +176,10 @@ Available assets did not include the expected Linux build."
 
   local tmp
   tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' RETURN
+  # Guard with ${tmp:-}: a RETURN trap set in a function persists and also fires
+  # on main()'s return (where this local is out of scope) → under `set -u` that
+  # raised "tmp: unbound variable" after a successful install. The :- makes it safe.
+  trap 'rm -rf "${tmp:-}"' RETURN
   local out="${tmp}/${appimage}"
 
   download "$url" "$out"
@@ -275,7 +278,7 @@ Available assets did not include the expected macOS (${dmg_arch}) build."
 
   local tmp
   tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' RETURN
+  trap 'rm -rf "${tmp:-}"' RETURN
   local out="${tmp}/${dmg}"
 
   download "$url" "$out"
