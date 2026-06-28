@@ -2,6 +2,11 @@
 
 > **Local-first AI agent orchestrator.** Run chains, workflows and cron jobs of AI agents on *your* machine with *your* API keys (BYOK) — with a desktop Pet companion, voice control, and a built-in browser the agents can drive.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/DiegoGaxi/agentchain-releases/main/assets/agentchain-space.png" alt="AgentChain — the Space, with your agent Pet" width="100%">
+</p>
+
+
 This repository hosts the **downloads and the auto-update feed** for the AgentChain desktop app. (The source lives in a separate private repository.)
 
 ---
