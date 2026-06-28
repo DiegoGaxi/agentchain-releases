@@ -40,7 +40,6 @@ Each release also publishes `SHA256SUMS-<platform>.txt` so you can verify your d
 
 > Builds are currently **unsigned** (code‑signing certificates are on the roadmap). Everything runs on all three OSes; the notes below cover the first‑launch friction that comes with unsigned apps.
 
-- **Linux (AppImage)** — needs **FUSE 2**. If a manual download won't start (`error loading libfuse.so.2`), install it once: `sudo apt install libfuse2t64` (Ubuntu 24.04+) or `sudo apt install libfuse2` (22.04), or run with `--appimage-extract-and-run`. *The one‑command installer does this automatically.*
 - **macOS** — unsigned, so Gatekeeper may block a manually‑downloaded `.dmg` ("can't be opened" / "unidentified developer"). Right‑click the app → **Open**, or run `xattr -cr /Applications/AgentChain.app`. *The installer clears the quarantine for you.* (Apple Silicon only for now.)
 - **Windows** — unsigned, so SmartScreen may warn on first run. Click **More info → Run anyway**.
 
@@ -62,11 +61,4 @@ Each release also publishes `SHA256SUMS-<platform>.txt` so you can verify your d
 - **Windows** — updates in‑app automatically.
 - **Linux / macOS** — re‑run the one‑command install above to update. *(Signed auto‑update is on the roadmap.)*
 
----
 
-## Verifying a download
-
-```bash
-# Linux example
-sha256sum -c <(grep 'AgentChain-<version>.AppImage' SHA256SUMS-linux.txt)
-```
