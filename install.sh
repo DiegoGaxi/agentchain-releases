@@ -59,6 +59,13 @@ else
   die "Need either 'curl' or 'wget' to download files."
 fi
 
+# aria2c (optional) downloads the large installer over many parallel connections — typically
+# 5-20x faster than a single curl/wget stream, because GitHub's release CDN throttles PER
+# connection. Suggest it once when missing.
+if ! have aria2c; then
+  warn "Para una descarga mucho más rápida instala 'aria2' (sudo apt install aria2 · brew install aria2 · sudo dnf install aria2) y reintenta."
+fi
+
 # fetch <url> -> stdout
 fetch() {
   if [ "$DOWNLOADER" = "curl" ]; then
@@ -72,10 +79,17 @@ fetch() {
 download() {
   local url="$1" dest="$2"
   info "Downloading $(basename "$dest") ..."
-  if [ "$DOWNLOADER" = "curl" ]; then
-    curl -fSL --progress-bar "$url" -o "$dest"
+  # Prefer aria2c (parallel, resumable) — much faster on GitHub's per-connection-throttled CDN.
+  # Fall back to a RESUMABLE curl/wget (-C - / -c + retries) so a slow/flaky link can continue
+  # instead of restarting the whole ~230MB file from 0%.
+  if have aria2c; then
+    aria2c -x16 -s16 -k1M --file-allocation=none --console-log-level=warn \
+      --summary-interval=0 --allow-overwrite=true \
+      -d "$(dirname "$dest")" -o "$(basename "$dest")" "$url"
+  elif [ "$DOWNLOADER" = "curl" ]; then
+    curl -fSL -C - --retry 5 --retry-delay 2 --retry-connrefused --progress-bar "$url" -o "$dest"
   else
-    wget -q --show-progress -O "$dest" "$url"
+    wget -c -q --show-progress --tries=5 --waitretry=2 -O "$dest" "$url"
   fi
 }
 
